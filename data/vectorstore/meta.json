@@ -1,0 +1,10 @@
+{
+  "model": "jina-embeddings-v3",
+  "passage_task": "retrieval.passage",
+  "dimension": 1024,
+  "num_documents": 21,
+  "num_chunks": 338,
+  "chunk_size": 1000,
+  "overlap": 150,
+  "corpus_hash": "01d6aa7187c6c7da2a576bbee80e649866dc503e0807616c7731724df198ab0a"
+}
