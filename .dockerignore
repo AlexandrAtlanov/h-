@@ -1,0 +1,16 @@
+.git
+.gitignore
+.github
+.env
+.env.*
+__pycache__
+*.pyc
+.venv
+venv
+dist
+data/vectorstore
+vectorstore
+tests
+presentation
+*.md
+kb_index_data.py

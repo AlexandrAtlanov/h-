@@ -1,0 +1,32 @@
+services:
+  app:
+    build:
+      context: .
+    image: h-legal-assistant:latest
+    init: true
+    ports:
+      - "${APP_PORT:-8000}:8000"
+    environment:
+      LLM_BASE_URL: ${LLM_BASE_URL:-}
+      LLM_API_KEY: ${LLM_API_KEY:-}
+      LLM_MODEL: ${LLM_MODEL:-deepseek/deepseek-v4.1-flash}
+      EMB_BASE_URL: ${EMB_BASE_URL:-}
+      EMB_API_KEY: ${EMB_API_KEY:-}
+      EMB_MODEL: ${EMB_MODEL:-baai/bge-m3}
+      RERANKER_BASE_URL: ${RERANKER_BASE_URL:-}
+      RERANKER_API_KEY: ${RERANKER_API_KEY:-}
+      RERANKER_MODEL: ${RERANKER_MODEL:-}
+      RERANKER_TOP_N: ${RERANKER_TOP_N:-8}
+      TOP_K: ${TOP_K:-6}
+      MAX_WORKERS: ${MAX_WORKERS:-6}
+      TEMPERATURE: ${TEMPERATURE:-0}
+      DATA_DIR: /app/data
+      VECTORSTORE_DIR: /app/cache
+      APP_LOG_LEVEL: ${APP_LOG_LEVEL:-INFO}
+    volumes:
+      - ./data:/app/data:ro
+      - index-cache:/app/cache
+    restart: unless-stopped
+
+volumes:
+  index-cache:
