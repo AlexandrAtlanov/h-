@@ -1,0 +1,17 @@
+# секреты
+.env
+.env.*
+!.env.example
+# python
+__pycache__/
+*.pyc
+.venv/
+venv/
+# артефакты прогонов
+dist/
+submission.csv
+*.tmp
+trace*.jsonl
+# старый индекс Jina и локальные кэши
+data/vectorstore/
+vectorstore/
