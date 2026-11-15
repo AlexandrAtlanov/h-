@@ -17,7 +17,7 @@ services:
       RERANKER_API_KEY: ${RERANKER_API_KEY:-}
       RERANKER_MODEL: ${RERANKER_MODEL:-}
       RERANKER_TOP_N: ${RERANKER_TOP_N:-8}
-      TOP_K: ${TOP_K:-6}
+      TOP_K: ${TOP_K:-8}
       MAX_WORKERS: ${MAX_WORKERS:-6}
       TEMPERATURE: ${TEMPERATURE:-0}
       DATA_DIR: /app/data

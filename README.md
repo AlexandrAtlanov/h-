@@ -60,7 +60,7 @@ docker compose up --build
 | `EMB_BASE_URL`, `EMB_API_KEY` | отдельный адрес и ключ для эмбеддингов (по умолчанию как у LLM) | — |
 | `RERANKER_MODEL` | реранкер, необязателен; пусто — выключен | Qwen3 Reranker 8B |
 | `RERANKER_BASE_URL`, `RERANKER_API_KEY`, `RERANKER_TOP_N` | настройки реранкера | `8` |
-| `TOP_K`, `MAX_WORKERS`, `TEMPERATURE` | фрагментов на запрос, параллельность, температура | `6`, `6`, `0` |
+| `TOP_K`, `MAX_WORKERS`, `TEMPERATURE` | фрагментов на запрос (не меньше 8), параллельность, температура | `8`, `6`, `0` |
 | `APP_PORT` | порт веб-чата | `8000` |
 
 Как подключить ключ: скопируйте `.env.example` в `.env`, впишите `LLM_BASE_URL` и `LLM_API_KEY`, перезапустите `docker compose up`. Официальный `api.deepseek.com` поддерживает чат, но не `/embeddings`: без endpoint для `bge-m3` поиск автоматически работает только по BM25.

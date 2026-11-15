@@ -77,7 +77,7 @@ RERANKER_MODEL = env("RERANKER_MODEL")              # пусто, реранке
 RERANKER_TOP_N = env_int("RERANKER_TOP_N", 8, 0, 32)
 USE_RERANKER = env("USE_RERANKER", default="1") != "0"
 
-TOP_K = env_int("TOP_K", 6, 4, 20)                   # чанков на один поисковый подзапрос
+TOP_K = max(8, env_int("TOP_K", 8, 4, 20))  # чанков на подзапрос, не меньше 8: эксперимент 15.11 (больше контекста — быстрее, балл не ниже)
 MAX_WORKERS = env_int("MAX_WORKERS", 6, 1, 16)       # параллельных вопросов
 TEMPERATURE = env_float("TEMPERATURE", 0.0, 0.0, 1.0)
 
