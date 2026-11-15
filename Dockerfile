@@ -13,7 +13,7 @@ RUN useradd --create-home --uid 10001 appuser
 COPY requirements.txt requirements-app.txt ./
 RUN pip install --no-cache-dir -r requirements.txt -r requirements-app.txt
 
-COPY rag.py agent.py solution.py ./
+COPY rag.py agent.py prompts.py solution.py ./
 COPY app ./app
 COPY data ./data
 
