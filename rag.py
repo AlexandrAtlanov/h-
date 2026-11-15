@@ -1,12 +1,12 @@
 """Поиск по базе знаний (Роль 1): загрузка документов, разбиение, метаданные, индекс, гибридный поиск.
 
-Публичный API (его использует agent.py, solution.py и веб-чат — менять только по согласию команды):
-    Chunk                       — фрагмент с текстом и метаданными
-    VectorStore.search(...)     — гибридный поиск BM25 + bge-m3 (RRF) с бустом по номеру договора/контрагенту
-    load_documents(path)        — .zip или папка с .txt/.md/.docx
-    build_store(...)            — разбивает документы, считает эмбеддинги, возвращает VectorStore
-    load_or_build_store(...)    — берёт готовый индекс из kb_index_data.py (если хэш базы совпал), иначе строит
-    get_or_create_vectorstore() — то же с кэшем в папке (для веб-чата и локальных скриптов)
+Публичный API (его использует agent.py, solution.py и веб-чат, менять только по согласию команды):
+    Chunk                        фрагмент с текстом и метаданными
+    VectorStore.search(...)      гибридный поиск BM25 + bge-m3 (RRF) с бустом по номеру договора/контрагенту
+    load_documents(path)         .zip или папка с .txt/.md/.docx
+    build_store(...)             разбивает документы, считает эмбеддинги, возвращает VectorStore
+    load_or_build_store(...)     берет готовый индекс из kb_index_data.py (если хэш базы совпал), иначе строит
+    get_or_create_vectorstore()  то же с кэшем в папке (для веб-чата и локальных скриптов)
 
 Индекс ничего не знает про LLM: только поиск. Если эмбеддер недоступен, поиск деградирует до BM25.
 """
@@ -45,9 +45,9 @@ COMPANY_SECTION_MAX = 1400  # раздел договора длиннее эт�
 # --------------------------------------------------------------------------- #
 @dataclass
 class Chunk:
-    """Фрагмент документа. Поля до `text` — исторический контракт с agent.py, не переименовывать."""
+    """Фрагмент документа. Поля до `text`, исторический контракт с agent.py, не переименовывать."""
 
-    chunk_id: str               # "<имя файла>::<номер>", ::0 — шапка документа
+    chunk_id: str               # "<имя файла>::<номер>", ::0, шапка документа
     source_filename: str
     header: str                 # шапка документа (название, стороны, дата, статус)
     body: str                   # текст фрагмента без шапки
@@ -64,9 +64,9 @@ class Chunk:
     status: str = ""            # "действует" | "утратил силу"
     amends: str = ""            # для допсоглашений: номер изменяемого договора
     amended_clauses: list[str] = field(default_factory=list)   # какие пункты меняет допсоглашение
-    amended_by: list[str] = field(default_factory=list)        # заметки «п. 3.2 изменён ДС № 1 ...»
+    amended_by: list[str] = field(default_factory=list)        # заметки «п. 3.2 изменен ДС № 1 ...»
     clauses: list[str] = field(default_factory=list)           # номера пунктов внутри фрагмента
-    locator: str = ""           # «п. 3.1–3.5», «ст. 70» — для ссылок и подсветки в чате
+    locator: str = ""           # «п. 3.1–3.5», «ст. 70», для ссылок и подсветки в чате
 
 
 # --------------------------------------------------------------------------- #
@@ -210,7 +210,7 @@ def extract_metadata(filename: str, lines: list[str]) -> dict:
     # --- документы компании ---
     title_lines = [l for l in lines[:4] if not re.match(r"^РЕДАКЦИЯ УТРАТИЛА СИЛУ", l, re.I)]
     title = title_lines[0] if title_lines else lines[0]
-    # письма/записки: «ООО «МЕРИДИАН» / Служба / Исх. № ...» — берём строку с типом документа
+    # письма/записки: «ООО «МЕРИДИАН» / Служба / Исх. № ...», берем строку с типом документа
     for l in lines[:6]:
         if re.match(r"^(СЛУЖЕБНАЯ ЗАПИСКА|ПРИКАЗ|ПИСЬМО|РЕГЛАМЕНТ|ДОГОВОР|ДОПОЛНИТЕЛЬНОЕ СОГЛАШЕНИЕ|ПОЛОЖЕНИЕ)", l, re.I):
             title = l
@@ -255,7 +255,7 @@ def extract_metadata(filename: str, lines: list[str]) -> dict:
         meta["amended_clauses"] = sorted(set(re.findall(r"пункт[а-я]*\s+(\d+(?:\.\d+)+)", full, re.I)))
         dnum = re.match(r"ДОПОЛНИТЕЛЬНОЕ СОГЛАШЕНИЕ\s*№\s*(\S+)", title, re.I)
         meta["doc_number"] = f"ДС № {dnum.group(1)}" if dnum else "ДС"
-        # дата допсоглашения — последняя дата в шапке (первая — дата основного договора)
+        # дата допсоглашения, последняя дата в шапке (первая это дата основного договора)
         if dates:
             meta["doc_date"] = dates[-1][1]
     return meta
@@ -344,7 +344,7 @@ def _chunk_company(lines: list[str]) -> tuple[list[str], list[tuple[str, list[st
         if len(text) <= COMPANY_SECTION_MAX:
             pieces.append((text, clauses, _locator(clauses, f"разд. {title}")))
             continue
-        cur: list[str] = [title]           # длинный раздел — по пунктам, заголовок раздела в каждом куске
+        cur: list[str] = [title]           # длинный раздел, по пунктам, заголовок раздела в каждом куске
         for l in sec[1:]:
             if len("\n".join(cur + [l])) > COMPANY_SECTION_MAX and len(cur) > 1:
                 cl = [m.group(1) for x in cur if (m := CLAUSE_RE.match(x))]
@@ -403,7 +403,7 @@ def chunk_document(filename: str, text: str) -> list[Chunk]:
         if not pieces:                       # короткий документ целиком одним фрагментом
             header_text = "\n".join(lines[:3])
             pieces = [("\n".join(lines), [], meta.get("doc_number", ""))]
-        else:                                # ::0 — шапка: стороны, дата, статус редакции
+        else:                                # ::0, шапка: стороны, дата, статус редакции
             pieces.insert(0, (header_text, [], "преамбула"))
 
     chunks = []
@@ -416,7 +416,7 @@ def chunk_document(filename: str, text: str) -> list[Chunk]:
 
 
 def link_amendments(chunks: list[Chunk]) -> None:
-    """Помечает пункты основного договора, изменённые допсоглашением, и дописывает это в text."""
+    """Помечает пункты основного договора, измененные допсоглашением, и дописывает это в text."""
     norm = lambda s: re.sub(r"[\s№]", "", s).upper()
     supplements = [c for c in chunks if c.amends]
     seen: set[str] = set()
@@ -433,7 +433,7 @@ def link_amendments(chunks: list[Chunk]) -> None:
                 note = f"К договору заключено {sup.doc_number}{when} (изменяет: " + \
                        (", ".join(f"п. {x}" for x in sup.amended_clauses) or "условия") + f"). Файл: {sup.source_filename}"
             elif touched:
-                note = (f"ВНИМАНИЕ: {', '.join('п. ' + x for x in touched)} изменён(ы) {sup.doc_number}{when} — "
+                note = (f"ВНИМАНИЕ: {', '.join('п. ' + x for x in touched)} изменен(ы) {sup.doc_number}{when}, "
                         f"см. {sup.source_filename}; проверьте, к каким событиям применяется новая редакция")
             else:
                 continue
@@ -452,7 +452,7 @@ def chunk_documents(documents: list[tuple[str, str]]) -> list[Chunk]:
 
 
 # --------------------------------------------------------------------------- #
-# BM25 (своя реализация: без лишних зависимостей и с учётом номеров документов)
+# BM25 (своя реализация: без лишних зависимостей и с учетом номеров документов)
 # --------------------------------------------------------------------------- #
 TOKEN_RE = re.compile(r"[0-9a-zа-я]+(?:[./-][0-9a-zа-я]+)*")
 STOP = set("и в во не на по с со к ко о об от до за из у а но или ли же бы то что как это для при без над под".split())
@@ -563,7 +563,7 @@ class VectorStore:
 
     def __init__(self, chunks: list[Chunk], vectors: np.ndarray | None, meta: dict | None = None) -> None:
         self.chunks = chunks
-        self.vectors = vectors              # None → только BM25
+        self.vectors = vectors              # None -> только BM25
         self.meta = meta or {}
         self.bm25 = BM25([tokenize(c.text) for c in chunks])
         self.by_id = {c.chunk_id: c for c in chunks}
@@ -586,7 +586,7 @@ class VectorStore:
                 return self._qcache[query]
         try:
             vec = get_embeddings(client, [query], base_url, api_key, model=model, task=task, batch_size=1)[0]
-        except Exception as exc:  # noqa: BLE001 — поиск не должен падать из-за эмбеддера
+        except Exception as exc:  # noqa: BLE001, поиск не должен падать из-за эмбеддера
             with self._lock:
                 self.embed_failures += 1
             print(f"Эмбеддинг запроса не получен ({exc}); поиск только по BM25", file=sys.stderr)
@@ -612,7 +612,7 @@ class VectorStore:
 
     def search(self, query: str, client: httpx.Client | None = None, base_url: str = "", api_key: str = "",
                model: str = "baai/bge-m3", task: str = "", top_k: int = 5) -> list[tuple[Chunk, float]]:
-        """[(Chunk, score)] по убыванию. score — RRF (+буст), сравним только внутри одного запроса."""
+        """[(Chunk, score)] по убыванию. score, RRF (+буст), сравним только внутри одного запроса."""
         if not self.chunks or not query.strip():
             return []
         k = min(top_k, len(self.chunks))
@@ -633,7 +633,7 @@ class VectorStore:
         elif bm.max() <= 0:
             return []
 
-        # буст ≈ +1 место в одном рейтинге: поднимает нужный договор, но не выталкивает законы целиком
+        # буст примерно +1 место в одном рейтинге: поднимает нужный договор, но не выталкивает законы целиком
         rrf += self._entity_boost(query) * (1.0 / (C + 1))
         top = np.argsort(-rrf)[:k]
         return [(self.chunks[int(i)], float(rrf[int(i)])) for i in top if rrf[int(i)] > 0]
@@ -652,7 +652,7 @@ def corpus_hash(documents: list[tuple[str, str]], model: str) -> str:
 
 def build_store(documents: list[tuple[str, str]], client: httpx.Client | None, base_url: str, api_key: str,
                 model: str = "baai/bge-m3", task: str = "", batch_size: int = 32) -> VectorStore:
-    """Разбивает и считает эмбеддинги. Без клиента/при сбое эмбеддера — индекс только BM25."""
+    """Разбивает и считает эмбеддинги. Без клиента/при сбое эмбеддера, индекс только BM25."""
     chunks = chunk_documents(documents)
     vectors = None
     if client is not None and base_url and api_key:
@@ -668,7 +668,7 @@ def build_store(documents: list[tuple[str, str]], client: httpx.Client | None, b
 
 
 def dump_store(store: VectorStore) -> str:
-    """Компактная строка (zlib+base64, векторы float16) — для kb_index_data.py."""
+    """Компактная строка (zlib+base64, векторы float16), для kb_index_data.py."""
     import zlib
     payload = {
         "meta": store.meta,
@@ -700,11 +700,11 @@ def load_or_build_store(documents: list[tuple[str, str]], client: httpx.Client |
             store = load_dump(kb_index_data.DATA)
             print(f"Индекс загружен из kb_index_data.py: {len(store.chunks)} фрагментов", file=sys.stderr)
             return store
-        print("kb_index_data.py не подходит к этой базе (другой хэш) — строим индекс заново", file=sys.stderr)
+        print("kb_index_data.py не подходит к этой базе (другой хэш), строим индекс заново", file=sys.stderr)
     except ImportError:
         pass
     except Exception as exc:  # noqa: BLE001
-        print(f"kb_index_data.py не прочитан ({exc}) — строим индекс заново", file=sys.stderr)
+        print(f"kb_index_data.py не прочитан ({exc}), строим индекс заново", file=sys.stderr)
     return build_store(documents, client, base_url, api_key, model=model)
 
 
@@ -721,7 +721,7 @@ def get_or_create_vectorstore(source_path: str | Path, store_dir: str | Path, cl
             if store.meta.get("corpus_hash") == expected and store.vectors is not None:
                 return store
         except Exception as exc:  # noqa: BLE001
-            print(f"Кэш индекса повреждён ({exc}), пересобираем", file=sys.stderr)
+            print(f"Кэш индекса поврежден ({exc}), пересобираем", file=sys.stderr)
     store = load_or_build_store(documents, client, base_url, api_key, model=model)
     if store.vectors is not None:
         path.parent.mkdir(parents=True, exist_ok=True)

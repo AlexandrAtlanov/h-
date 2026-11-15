@@ -135,7 +135,7 @@ def main() -> None:
         if cfg.reranker_model and cfg.reranker_top_n > 0:
             print(f"Реранкер: {cfg.reranker_model} (top_n={cfg.reranker_top_n})\n")
         else:
-            print("Реранкер отключён\n")
+            print("Реранкер отключен\n")
 
         for idx, question in enumerate(SAMPLE_QUESTIONS, 1):
             print("=" * 80)

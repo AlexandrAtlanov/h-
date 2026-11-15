@@ -1,12 +1,12 @@
 """Сборка ZIP для сабмита (Роль 1) с проверками перед отправкой.
 
-    python make_zip.py                     → dist/submission_<дата>_<коммит>.zip (конвейер agent)
-    python make_zip.py --pipeline simple   → то же, но solution.py работает упрощённым путём (1 вызов LLM)
+    python make_zip.py                     -> dist/submission_<дата>_<коммит>.zip (конвейер agent)
+    python make_zip.py --pipeline simple   -> то же, но solution.py работает упрощенным путем (1 вызов LLM)
 
 Что делает:
-  * кладёт в КОРЕНЬ архива все .py из корня репозитория, кроме служебных (EXCLUDE), и requirements.txt;
-  * requirements.txt для сабмита формируется из SUBMISSION_PACKAGES с версиями из разрешённого списка;
-  * проверяет: синтаксис, импорты в чистой папке, отсутствие ключей, размер ≤ 128 МБ,
+  * кладет в КОРЕНЬ архива все .py из корня репозитория, кроме служебных (EXCLUDE), и requirements.txt;
+  * requirements.txt для сабмита формируется из SUBMISSION_PACKAGES с версиями из разрешенного списка;
+  * проверяет: синтаксис, импорты в чистой папке, отсутствие ключей, размер до 128 МБ,
     актуальность kb_index_data.py (совпадение хэша базы);
   * в архив НЕ попадают .env, данные, вопросы, папки app/, eval/, data/.
 """
@@ -26,7 +26,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent
 DIST = ROOT / "dist"
 
-# Разрешённые организаторами версии (requirements.txt из папки с данными)
+# Разрешенные организаторами версии (requirements.txt из папки с данными)
 ALLOWED = {
     "fastapi": "0.143.2", "uvicorn": "0.54.0", "pydantic": "2.14.2", "python-multipart": "0.0.20",
     "python-dotenv": "1.1.1", "openai": "3.45.0", "httpx": "0.28.1", "requests": "2.32.5",
@@ -36,7 +36,7 @@ ALLOWED = {
     "pypdf": "6.21.4", "python-docx": "1.2.0", "beautifulsoup4": "4.14.2", "lxml": "6.0.2",
     "PyYAML": "6.0.3", "SQLAlchemy": "2.0.44", "tiktoken": "0.12.0",
 }
-# Что реально нужно сабмиту. Добавили новую библиотеку в agent.py/rag.py — допишите сюда.
+# Что реально нужно сабмиту. Добавили новую библиотеку в agent.py/rag.py, допишите сюда.
 SUBMISSION_PACKAGES = ["httpx", "numpy", "python-dotenv"]
 
 # Служебные скрипты, которые не нужны на платформе
@@ -44,7 +44,7 @@ EXCLUDE = {"make_zip.py", "build_index.py", "test.py", "mock_api.py", "conftest.
 REQUIRED = {"solution.py", "agent.py", "rag.py"}
 MAX_MB = 128
 
-# импортируемое имя → пакет из ALLOWED (для проверки, что всё нужное есть в requirements)
+# импортируемое имя -> пакет из ALLOWED (для проверки, что все нужное есть в requirements)
 IMPORT_TO_PACKAGE = {"httpx": "httpx", "numpy": "numpy", "dotenv": "python-dotenv", "openai": "openai",
                      "requests": "requests", "faiss": "faiss-cpu", "rank_bm25": "rank-bm25", "bm25s": "bm25s",
                      "sklearn": "scikit-learn", "rapidfuzz": "rapidfuzz", "pandas": "pandas", "yaml": "PyYAML",
@@ -65,7 +65,7 @@ def git(*args: str) -> str:
 
 
 def secret_values() -> list[str]:
-    """Значения ключей из .env и окружения — их не должно быть в коде."""
+    """Значения ключей из .env и окружения, их не должно быть в коде."""
     vals = []
     env_file = ROOT / ".env"
     if env_file.is_file():
@@ -107,14 +107,14 @@ def main() -> None:
                 continue
             pkg = IMPORT_TO_PACKAGE.get(mod)
             if pkg is None:
-                errors.append(f"{p.name}: импорт «{mod}» не из разрешённого списка")
+                errors.append(f"{p.name}: импорт «{mod}» не из разрешенного списка")
             else:
                 used_packages.add(pkg)
     for pkg in sorted(used_packages - set(SUBMISSION_PACKAGES)):
         errors.append(f"пакет {pkg} используется в коде, но не добавлен в SUBMISSION_PACKAGES")
     for pkg in SUBMISSION_PACKAGES:
         if pkg not in ALLOWED:
-            errors.append(f"пакет {pkg} не разрешён организаторами")
+            errors.append(f"пакет {pkg} не разрешен организаторами")
     requirements = "".join(f"{pkg}=={ALLOWED[pkg]}\n" for pkg in SUBMISSION_PACKAGES if pkg in ALLOWED)
 
     # 2. секреты
@@ -128,7 +128,7 @@ def main() -> None:
 
     # 3. готовый индекс
     if "kb_index_data.py" not in names:
-        warnings.append("нет kb_index_data.py — индекс будет строиться на платформе (≈ +1 мин). "
+        warnings.append("нет kb_index_data.py, индекс будет строиться на платформе (примерно +1 мин). "
                         "Запустите python build_index.py")
     else:
         try:
@@ -138,17 +138,17 @@ def main() -> None:
             kb = next((ROOT / "data" / n for n in ("kb.zip", "knowledge-base.zip", "knowledge-base")
                        if (ROOT / "data" / n).exists()), None)
             if kb is None:
-                warnings.append("не найдена локальная база в data/ — не могу проверить хэш kb_index_data.py")
+                warnings.append("не найдена локальная база в data/, не могу проверить хэш kb_index_data.py")
             elif kb_index_data.CORPUS_HASH != corpus_hash(load_documents(kb), getattr(kb_index_data, "MODEL", "bge-m3")):
-                warnings.append("kb_index_data.py устарел (база или разбиение поменялись) — "
+                warnings.append("kb_index_data.py устарел (база или разбиение поменялись), "
                                 "пересоберите: python build_index.py. Иначе индекс построится на платформе.")
         except Exception as exc:  # noqa: BLE001
             warnings.append(f"не удалось проверить kb_index_data.py: {exc}")
 
     if errors:
-        print("ОШИБКИ — архив не собран:")
+        print("ОШИБКИ, архив не собран:")
         for e in errors:
-            print("  ✗", e)
+            print("  -", e)
         sys.exit(1)
 
     # 4. сборка
@@ -177,16 +177,16 @@ def main() -> None:
         )
         if check.returncode != 0 or "ok" not in check.stdout:
             print("ВНИМАНИЕ: модули не импортируются из чистой папки:\n" + check.stderr[-1500:])
-            warnings.append("импорт в чистой папке не прошёл (если это ModuleNotFoundError httpx/numpy — "
+            warnings.append("импорт в чистой папке не прошел (если это ModuleNotFoundError httpx/numpy, "
                             "просто не установлены локально)")
 
     print(f"Архив: {out.relative_to(ROOT)} ({size_mb:.2f} МБ)")
     print("Состав:", ", ".join(sorted(names | {"requirements.txt", "run_config.py"})), f"| конвейер: {pipeline}")
     print("requirements.txt:", requirements.strip().replace("\n", ", "))
     if dirty:
-        warnings.append("есть незакоммиченные изменения — закоммитьте и поставьте тег sub-ДД-N перед отправкой")
+        warnings.append("есть незакоммиченные изменения, закоммитьте и поставьте тег sub-ДД-N перед отправкой")
     for w in warnings:
-        print("  ⚠", w)
+        print("  !", w)
     print("\nДальше: тег  git tag sub-$(date +%d)-N && git push --tags  и строка в SUBMISSIONS.md")
 
 

@@ -1,7 +1,7 @@
-"""Предрасчёт индекса базы знаний в kb_index_data.py (Роль 1).
+"""Предрасчет индекса базы знаний в kb_index_data.py (Роль 1).
 
 Зачем: на платформе копируются только .py файлы из корня ZIP, поэтому готовый индекс
-кладём внутрь .py-модуля. solution.py берёт его, если хэш базы совпал; иначе строит индекс сам.
+кладем внутрь .py-модуля. solution.py берет его, если хэш базы совпал; иначе строит индекс сам.
 
 Запуск (ключи в .env или окружении: LLM_BASE_URL, LLM_API_KEY, при необходимости EMB_MODEL):
     python build_index.py                    # база из data/knowledge-base (или data/kb.zip)
@@ -53,11 +53,11 @@ def main() -> None:
     with httpx.Client(timeout=120.0) as client:
         store = build_store(docs, client, base, key, model=model)
         if store.vectors is None:
-            raise SystemExit("Эмбеддинги не посчитаны — проверьте ключ, адрес и EMB_MODEL. Файл не записан.")
+            raise SystemExit("Эмбеддинги не посчитаны, проверьте ключ, адрес и EMB_MODEL. Файл не записан.")
 
         out = ROOT / "kb_index_data.py"
         out.write_text(
-            '"""Сгенерировано build_index.py — не редактировать вручную."""\n'
+            '"""Сгенерировано build_index.py, не редактировать вручную."""\n'
             f"CORPUS_HASH = {corpus_hash(docs, model)!r}\n"
             f"MODEL = {model!r}\n"
             f"DATA = {dump_store(store)!r}\n",

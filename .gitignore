@@ -12,6 +12,8 @@ dist/
 submission.csv
 *.tmp
 trace*.jsonl
+# рабочие артефакты локальной оценки
+eval/reports/
 # старый индекс Jina и локальные кэши
 data/vectorstore/
 vectorstore/
