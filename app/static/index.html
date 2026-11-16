@@ -1,0 +1,117 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#0b1f44">
+  <title>Юридический ассистент</title>
+  <link rel="stylesheet" href="/static/app.css">
+</head>
+<body>
+  <div class="app-shell">
+    <header class="topbar">
+      <div class="brand">
+        <div class="brand-mark" aria-hidden="true">Ю</div>
+        <div class="brand-text">
+          <h1>Юридический ассистент</h1>
+          <p>Поиск по договорам и нормативным документам</p>
+        </div>
+      </div>
+      <div class="topbar-actions">
+        <span id="health-chip" class="health-chip loading" role="status" aria-live="polite">
+          <span class="health-dot" aria-hidden="true"></span>
+          <span id="health-text">Подключение…</span>
+        </span>
+        <button id="new-chat" class="btn btn-ghost" type="button">Новый чат</button>
+      </div>
+    </header>
+
+    <div id="banner" class="banner" role="alert" hidden></div>
+
+    <main class="layout">
+      <section class="chat-pane" aria-label="Чат">
+        <div id="chat-scroll" class="chat-scroll">
+          <div id="chat" class="chat" aria-live="polite"></div>
+        </div>
+        <button id="scroll-latest" class="scroll-latest" type="button" hidden>
+          К последним сообщениям <span aria-hidden="true">↓</span>
+        </button>
+        <form id="composer" class="composer" autocomplete="off">
+          <div class="composer-box">
+            <textarea id="message" rows="1" maxlength="4000"
+              placeholder="Напишите вопрос о договоре или документе…"
+              aria-label="Вопрос юридическому ассистенту"></textarea>
+            <button id="send" class="btn btn-send" type="submit" aria-label="Отправить вопрос">
+              <span class="send-label">Отправить</span>
+              <span class="send-arrow" aria-hidden="true">→</span>
+            </button>
+          </div>
+          <div class="composer-hint">
+            <span>Enter — отправить · Shift+Enter — перенос · <kbd>/</kbd> — фокус</span>
+            <span class="composer-meta">
+              <span id="message-count">0 / 4000</span>
+              <span id="composer-state" class="composer-state"></span>
+            </span>
+          </div>
+        </form>
+      </section>
+
+      <aside class="side-pane" aria-label="Источники и документы">
+        <div class="tabs" role="tablist" aria-label="Панель источников">
+          <button id="tab-sources" class="tab is-active" type="button" role="tab"
+            aria-selected="true" aria-controls="sources-panel">Источники</button>
+          <button id="tab-documents" class="tab" type="button" role="tab"
+            aria-selected="false" aria-controls="documents-panel">Документы</button>
+        </div>
+
+        <div id="sources-panel" class="tab-panel" role="tabpanel" aria-labelledby="tab-sources">
+          <div class="panel-intro">
+            <div>
+              <h2>Подтверждения</h2>
+              <p id="sources-summary">Фрагменты из последнего ответа</p>
+            </div>
+            <span id="source-count" class="panel-count">0</span>
+          </div>
+          <div id="sources-empty" class="side-empty">
+            <div class="side-empty-mark" aria-hidden="true">↗</div>
+            <p>Здесь появятся подтверждающие фрагменты. Нажмите на источник — откроется документ с подсвеченным пунктом.</p>
+          </div>
+          <div id="sources-list" class="source-list"></div>
+        </div>
+
+        <div id="documents-panel" class="tab-panel" role="tabpanel" aria-labelledby="tab-documents" hidden>
+          <div class="panel-intro">
+            <div>
+              <h2>Каталог документов</h2>
+              <p>Все доступные источники знаний</p>
+            </div>
+            <span id="document-count" class="panel-count">0</span>
+          </div>
+          <label class="search">
+            <span class="sr-only">Поиск по документам</span>
+            <input id="doc-search" type="search" placeholder="Название, номер или контрагент…">
+          </label>
+          <div id="documents-list" class="doc-list"></div>
+        </div>
+      </aside>
+    </main>
+  </div>
+
+  <div id="drawer" class="drawer" hidden>
+    <div class="drawer-backdrop" data-close="1"></div>
+    <section class="drawer-panel" role="dialog" aria-modal="true" aria-labelledby="drawer-title">
+      <header class="drawer-head">
+        <div class="drawer-title-wrap">
+          <h2 id="drawer-title">Документ</h2>
+          <div id="drawer-meta" class="drawer-meta"></div>
+        </div>
+        <button id="drawer-close" class="icon-btn" type="button" data-close="1" aria-label="Закрыть документ">×</button>
+      </header>
+      <div id="drawer-body" class="drawer-body"></div>
+    </section>
+  </div>
+
+  <div id="toast" class="toast" role="status" aria-live="polite" hidden></div>
+  <script src="/static/app.js" defer></script>
+</body>
+</html>
