@@ -41,7 +41,7 @@ class AgentConfig:
     emb_query_task: str = "retrieval.query"     # Jina: "retrieval.query"; bge-m3 task не требует
     emb_passage_task: str = "retrieval.passage"  # Jina: "retrieval.passage"
     top_k: int = 4                  # чанков на один подзапрос
-    max_iterations: int = 1         # сколько раз разрешен допоиск
+    max_iterations: int = 2         # сколько раз разрешен допоиск
     max_context_chunks: int = 16    # потолок чанков в промпт ответа
     neighbor_top_n: int = 3         # для скольких лучших чанков подтягиваем ::0 и ::N+1
     search_workers: int = 6         # потоки для эмбеддинг-поиска внутри одного вопроса
@@ -434,7 +434,7 @@ class LegalAgent:
                 self.cfg.reranker_base_url.rstrip("/") + "/rerank",
                 headers={"Authorization": f"Bearer {self.cfg.reranker_api_key}"},
                 json=payload,
-                timeout=self.cfg.llm_timeout,
+                timeout=min(self.cfg.llm_timeout, 15.0)
             )
             resp.raise_for_status()
             data = resp.json()

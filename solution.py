@@ -73,7 +73,7 @@ RERANK_KEY = env("RERANKER_API_KEY", default=LLM_KEY)
 
 LLM_MODEL = env("LLM_MODEL", "GEN_MODEL", "OPENAI_MODEL", default="deepseek/deepseek-v4.1-flash")
 EMB_MODEL = env("EMB_MODEL", default="baai/bge-m3")
-RERANKER_MODEL = env("RERANKER_MODEL")              # пусто, реранкер выключен
+RERANKER_MODEL = env("RERANKER_MODEL", default="qwen/qwen3-reranker-8b")              # пусто, реранкер выключен
 RERANKER_TOP_N = env_int("RERANKER_TOP_N", 8, 0, 32)
 USE_RERANKER = env("USE_RERANKER", default="1") != "0"
 
